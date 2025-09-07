@@ -5,22 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Visor de Documentación</title>
     <style>
+        /* Estilos generales para ambos modos */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             line-height: 1.6;
-            background-color: #f6f8fa;
-            color: #24292e;
             margin: 0;
             padding: 20px;
+            transition: background-color 0.5s, color 0.5s;
         }
 
         .container {
             max-width: 900px;
             margin: 0 auto;
-            background-color: #ffffff;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.5s, color 0.5s;
         }
 
         .controls {
@@ -29,10 +29,10 @@
             gap: 15px;
             margin-bottom: 20px;
             padding: 15px;
-            background-color: #e3e3e3;
             border-radius: 6px;
+            transition: background-color 0.5s;
         }
-        
+
         .controls label {
             font-weight: bold;
             display: block;
@@ -42,15 +42,21 @@
         .controls select, .controls button {
             padding: 8px 12px;
             border-radius: 4px;
-            border: 1px solid #ccc;
-            background-color: #fff;
+            border: 1px solid #999;
+            background-color: #d4d4d4;
+            color: #333;
             cursor: pointer;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .controls button:hover {
+            background-color: #c0c0c0;
         }
 
         .controls button.active {
-            background-color: #007bff;
+            background-color: #5a5a5a;
             color: #fff;
-            border-color: #007bff;
+            border-color: #5a5a5a;
         }
 
         #markdown-content {
@@ -59,6 +65,7 @@
             border-radius: 8px;
             min-height: 400px;
             overflow-y: auto;
+            transition: border-color 0.5s;
         }
 
         pre {
@@ -71,6 +78,46 @@
         
         code {
             font-family: "SF Mono", "Consolas", monospace;
+        }
+        
+        /* Estilos del modo claro */
+        body.light-mode {
+            background-color: #f6f8fa;
+            color: #24292e;
+        }
+        body.light-mode .container {
+            background-color: #ffffff;
+        }
+        body.light-mode .controls {
+            background-color: #e3e3e3;
+        }
+        body.light-mode #markdown-content {
+            border-color: #ddd;
+        }
+
+        /* Estilos del modo oscuro */
+        body.dark-mode {
+            background-color: #1a1b1e;
+            color: #e6e6e6;
+        }
+        body.dark-mode .container {
+            background-color: #2b2d30;
+        }
+        body.dark-mode .controls {
+            background-color: #3a3c40;
+        }
+        body.dark-mode .controls select, body.dark-mode .controls button {
+            background-color: #4a4d52;
+            color: #e6e6e6;
+            border-color: #666;
+        }
+        body.dark-mode .controls button.active {
+            background-color: #1e88e5;
+            color: #fff;
+            border-color: #1e88e5;
+        }
+        body.dark-mode #markdown-content {
+            border-color: #444;
         }
     </style>
 </head>
@@ -103,6 +150,10 @@
                 <button data-size="medium" class="active">A</button>
                 <button data-size="large">A+</button>
             </div>
+            <div>
+                <label>Modo:</label>
+                <button id="mode-toggle">Claro</button>
+            </div>
         </div>
         <div id="markdown-content">Cargando...</div>
     </div>
@@ -114,6 +165,7 @@
         const fontSelector = document.getElementById('font-selector');
         const sizeButtons = document.querySelectorAll('.controls button[data-size]');
         const markdownContainer = document.getElementById('markdown-content');
+        const modeToggle = document.getElementById('mode-toggle');
 
         // Función para cargar y renderizar el archivo Markdown
         async function loadMarkdownFile(filename) {
@@ -157,12 +209,18 @@
             localStorage.setItem('docSize', selectedSize);
         }
 
+        // Función para cambiar el modo (claro/oscuro)
+        function toggleDarkMode() {
+            const isDarkMode = document.body.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', isDarkMode ? 'enabled' : 'disabled');
+            modeToggle.textContent = isDarkMode ? 'Oscuro' : 'Claro';
+        }
+
         // Lógica de carga
         document.addEventListener('DOMContentLoaded', async () => {
             // Lógica para llenar el selector de documentos
             const markdownFiles = [
                 'documento-1.md', 'documento-2.md', 'lorem-ipsum-1.md', 'lorem-ipsum-2.md'
-                // Agrega más nombres de archivo aquí
             ];
 
             markdownFiles.forEach(file => {
@@ -175,10 +233,19 @@
             // Lógica para restaurar la configuración guardada
             const savedFont = localStorage.getItem('docFont');
             const savedSize = localStorage.getItem('docSize');
+            const savedMode = localStorage.getItem('darkMode');
+            
             if (savedFont) fontSelector.value = savedFont;
             if (savedSize) {
                 sizeButtons.forEach(btn => btn.classList.remove('active'));
                 document.querySelector(`[data-size="${savedSize}"]`).classList.add('active');
+            }
+            if (savedMode === 'enabled') {
+                document.body.classList.add('dark-mode');
+                modeToggle.textContent = 'Oscuro';
+            } else {
+                document.body.classList.add('light-mode');
+                modeToggle.textContent = 'Claro';
             }
 
             // Manejo de eventos
@@ -191,6 +258,7 @@
                     applyStyles();
                 });
             });
+            modeToggle.addEventListener('click', toggleDarkMode);
 
             // Carga el primer documento y aplica estilos
             await loadMarkdownFile(docSelector.value);
